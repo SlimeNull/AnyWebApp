@@ -40,7 +40,7 @@
             webView.Dock = DockStyle.Fill;
             webView.Location = new Point(0, 0);
             webView.Name = "webView";
-            webView.Size = new Size(800, 450);
+            webView.Size = new Size(1178, 744);
             webView.TabIndex = 0;
             webView.ZoomFactor = 1D;
             webView.CoreWebView2InitializationCompleted += CoreWebView2InitializationCompleted;
@@ -49,7 +49,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1178, 744);
             Controls.Add(webView);
             Name = "AppForm";
             Text = "AppForm";

@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Title>AnyWebApp</Title>
+    <Authors>SlimeNull</Authors>
+    <Company />
+    <Description>Run any web app without hosting a web server!</Description>
   </PropertyGroup>
 
   <ItemGroup>
