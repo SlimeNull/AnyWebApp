@@ -10,13 +10,18 @@ namespace AnyWebApp
     public class AppConfig
     {
         public string Root { get; set; } = "wwwroot";
-        public string Scheme { get; set; } = "http";
+        public string Scheme { get; set; } = "https";
+        public string UserAgent { get; set; }= string.Empty;
         public string StartupUri { get; set; } = "/";
-
 
 
         public bool EnableIndexFiles { get; set; } = true;
         public bool EnableDocumentFallbackFiles { get; set; } = false;
+
+        public bool EnableDeveloperTools { get; set; } = false;
+        public bool EnableZoomControl { get; set; } = false;
+        public bool EnableAutoReload { get; set; } = false;
+        public bool EnableAutoTitle { get; set; } = false;
 
         public string[] IndexFiles { get; set; } = new string[]
         {
@@ -34,6 +39,7 @@ namespace AnyWebApp
         public string WindowIcon { get; set; } = "icon.png";
         public int WindowWidth { get; set; } = -1;
         public int WindowHeight { get; set; } = -1;
+        public bool WindowCenterStart { get; set; } = false;
         public double ZoomFactor { get; set; } = 1;
 
         public static readonly Regex RegexHostName = new Regex(@"^([a-zA-Z0-9-]+\.)([a-zA-Z]{2,})(\.[a-zA-Z]{2,})?$");

@@ -1,4 +1,8 @@
+using System;
+using System.Drawing;
+using System.IO;
 using System.Text;
+using System.Windows.Forms;
 using AnyWebApp.Utils;
 using Microsoft.Web.WebView2.Core;
 
@@ -18,18 +22,18 @@ namespace AnyWebApp
                 Height = App.Config.WindowHeight;
             if (App.Config.ZoomFactor != 0)
                 webView.ZoomFactor = App.Config.ZoomFactor;
+            if (App.Config.WindowCenterStart)
+                StartPosition = FormStartPosition.CenterScreen;
             if (File.Exists(App.Config.WindowIcon))
                 Icon = new Icon(App.Config.WindowIcon);
 
             UriBase = $"{App.Config.Scheme}://{App.Config.VirtualHostName}";
+            _ = webView.EnsureCoreWebView2Async();
         }
 
         public readonly string UriBase;
 
-        private void AppFormLoaded(object sender, EventArgs e)
-        {
-            _ = webView.EnsureCoreWebView2Async();
-        }
+        private FileSystemWatcher? fileSystemWatcher;
 
         private void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
         {
@@ -37,6 +41,20 @@ namespace AnyWebApp
 
             coreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             coreWebView2.WebResourceRequested += CoreWebView2WebResourceRequested;
+
+            coreWebView2.AddHostObjectToScript("$nativeWindow", new Injections.Window(this));
+
+            coreWebView2.Settings.AreDevToolsEnabled = App.Config.EnableDeveloperTools;
+            coreWebView2.Settings.IsZoomControlEnabled = App.Config.EnableZoomControl;
+
+            if (App.Config.EnableAutoReload)
+                EnableFileSystemWatcher(coreWebView2, App.Config.Root);
+
+            if (App.Config.EnableAutoTitle)
+                EnableAutoTitle(coreWebView2);
+
+            if (!string.IsNullOrWhiteSpace(App.Config.UserAgent))
+                coreWebView2.Settings.UserAgent = App.Config.UserAgent;
 
             string absoluteStartupUri = $"{UriBase}{App.Config.StartupUri}";
             if (Uri.TryCreate(absoluteStartupUri, UriKind.Absolute, out Uri? startupUri))
@@ -99,6 +117,31 @@ namespace AnyWebApp
                     }
                 }
             }
+        }
+
+        private void EnableFileSystemWatcher(CoreWebView2 coreWebView2, string path)
+        {
+            FileSystemWatcher watcher = new FileSystemWatcher(path);
+
+            watcher.Filter = "*";
+            watcher.IncludeSubdirectories = true;
+            watcher.EnableRaisingEvents = true;
+
+            watcher.Changed += (s, e) =>
+            {
+                this.Invoke(() =>
+                {
+                    coreWebView2.Reload();
+                });
+            };
+        }
+
+        private void EnableAutoTitle(CoreWebView2 coreWebView2)
+        {
+            coreWebView2.DocumentTitleChanged += (s, e) =>
+            {
+                Text = coreWebView2.DocumentTitle;
+            };
         }
 
         private static CoreWebView2WebResourceResponse? GenerateResponseFromFile(CoreWebView2 coreWebView2, string path)

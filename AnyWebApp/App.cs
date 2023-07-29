@@ -1,5 +1,10 @@
+using System;
+using System.Drawing;
+using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using Microsoft.Web.WebView2.Core;
 
 namespace AnyWebApp
 {
@@ -20,6 +25,11 @@ namespace AnyWebApp
                 File.WriteAllText(AppConfigFile, JsonSerializer.Serialize(Config));
 
             AppConfig.Check(Config);
+
+#if DEBUG
+            Config.EnableDeveloperTools = true;
+            Config.EnableAutoReload = true;
+#endif
         }
 
         /// <summary>

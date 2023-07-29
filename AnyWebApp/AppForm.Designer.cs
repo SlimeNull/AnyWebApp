@@ -1,4 +1,8 @@
-﻿namespace AnyWebApp
+﻿using System.Drawing;
+using System.Windows.Forms;
+using Microsoft.Web.WebView2.WinForms;
+
+namespace AnyWebApp
 {
     partial class AppForm
     {
@@ -28,7 +32,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            webView = new Microsoft.Web.WebView2.WinForms.WebView2();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AppForm));
+            webView = new WebView2();
             ((System.ComponentModel.ISupportInitialize)webView).BeginInit();
             SuspendLayout();
             // 
@@ -51,15 +56,15 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1178, 744);
             Controls.Add(webView);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "AppForm";
             Text = "AppForm";
-            Load += AppFormLoaded;
             ((System.ComponentModel.ISupportInitialize)webView).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
 
-        private Microsoft.Web.WebView2.WinForms.WebView2 webView;
+        private WebView2 webView;
     }
 }

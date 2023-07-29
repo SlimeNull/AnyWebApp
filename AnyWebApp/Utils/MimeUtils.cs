@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -566,7 +567,13 @@ namespace AnyWebApp.Utils
 
         public static string OctetStream => "application/octet-stream";
 
-        public static bool TryGetMimeType(string filename, [NotNullWhen(true)] out string? mimeType)
+        public static bool TryGetMimeType(string filename,
+#if NET481
+#else
+            [NotNullWhen(true)]
+#endif
+
+        out string? mimeType)
         {
             string? extension = Path.GetExtension(filename);
 

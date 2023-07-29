@@ -1,6 +1,20 @@
+
+<div align="center">
+
+![icon](assets/icon256.png)
+
 # AnyWebApp
 
-Run any web app without hosting a web server!
+_✨ Run any web app without hosting a web server! ✨_
+
+[![ZH-HANS](https://img.shields.io/badge/中文-简体-red)](README.zh.md)
+[![LICENSE](https://img.shields.io/github/license/SlimeNull/AnyWebApp)](/LICENSE)
+![GitHub all releases](https://img.shields.io/github/downloads/SlimeNull/AnyWebApp/total)
+
+
+</div>
+
+---
 
 You don't need to install anything, write any scripts, or do any complex configuration. 
 Just follow these steps to run your web application as a desktop application on Windows.
@@ -15,9 +29,13 @@ This simple app was built with [vue](https://vuejs.org/) and [vuetify](https://v
 ## Usage
 
 1. Downlaod the latest release.
-2. Create a folder, like `wwwroot` for storage your web app assets.
+2. Create a folder `wwwroot` for storage your web app assets.
 3. Copy all of your web app assets to the folder
 4. Start `AnyWebApp.exe`
+
+## Requirements
+
+- [Microsoft Edge WebView2 Runtime](https://learn.microsoft.com/en-us/microsoft-edge/webview2/)
 
 ## Confuguration
 
