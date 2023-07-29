@@ -28,7 +28,7 @@ This simple app was built with [vue](https://vuejs.org/) and [vuetify](https://v
 
 ## Usage
 
-1. Downlaod the latest release.
+1. Download the latest release.
 2. Create a folder `wwwroot` for storage your web app assets.
 3. Copy all of your web app assets to the folder
 4. Start `AnyWebApp.exe`
