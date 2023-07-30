@@ -27,6 +27,7 @@ namespace AnyWebApp
         public bool EnableDeveloperTools { get; set; } = false;
         public bool EnableZoomControl { get; set; } = false;
         public bool EnableAutoReload { get; set; } = false;
+        public bool EnableStatusBar { get; set; } = false;
         public bool EnableAutoTitle { get; set; } = false;
         public bool EnableFakeCors { get; set; } = false;
 

@@ -86,6 +86,7 @@ namespace AnyWebApp
 
             coreWebView2.Settings.AreDevToolsEnabled = App.Config.EnableDeveloperTools;
             coreWebView2.Settings.IsZoomControlEnabled = App.Config.EnableZoomControl;
+            coreWebView2.Settings.IsStatusBarEnabled = App.Config.EnableStatusBar;
 
             if (App.Config.EnableAutoReload)
                 EnableFileSystemWatcher(coreWebView2, App.Config.Root);
