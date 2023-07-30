@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AnyWebApp.Injections
 {
+    [ComVisible(true)]
     public class Window
     {
         private readonly Form form;
@@ -16,8 +18,8 @@ namespace AnyWebApp.Injections
             this.form = form;
         }
 
-        public int width { get => form.Width; set => form.Width = value; }
-        public int height { get => form.Height; set => form.Height = value; }
-        public string title { get => form.Text; set => form.Text = value; }
+        public int Width { get => form.Width; set => form.Width = value; }
+        public int Height { get => form.Height; set => form.Height = value; }
+        public string Title { get => form.Text; set => form.Text = value; }
     }
 }

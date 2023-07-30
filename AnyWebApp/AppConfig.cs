@@ -9,10 +9,16 @@ namespace AnyWebApp
 {
     public class AppConfig
     {
+        public enum Theme
+        {
+            Auto, Light, Dark
+        }
+
         public string Root { get; set; } = "wwwroot";
         public string Scheme { get; set; } = "https";
         public string UserAgent { get; set; }= string.Empty;
         public string StartupUri { get; set; } = "/";
+        public string StartupBackground { get; set; } = string.Empty;
 
 
         public bool EnableIndexFiles { get; set; } = true;
@@ -22,6 +28,7 @@ namespace AnyWebApp
         public bool EnableZoomControl { get; set; } = false;
         public bool EnableAutoReload { get; set; } = false;
         public bool EnableAutoTitle { get; set; } = false;
+        public bool EnableFakeCors { get; set; } = false;
 
         public string[] IndexFiles { get; set; } = new string[]
         {
@@ -33,10 +40,16 @@ namespace AnyWebApp
             "index.htm", "index.html", "default.htm", "default.html"
         };
 
+        public string[] FakeCorsTargetOrigins { get; set; } = new string[]
+        {
+
+        };
+
         public string VirtualHostName { get; set; } = "localhost.app";
 
         public string WindowTitle { get; set; } = "AnyWebApp";
         public string WindowIcon { get; set; } = "icon.png";
+        public Theme WindowTheme { get; set; } = Theme.Auto;
         public int WindowWidth { get; set; } = -1;
         public int WindowHeight { get; set; } = -1;
         public bool WindowCenterStart { get; set; } = false;

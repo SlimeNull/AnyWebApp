@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background-color: #181818;
+          color: #f0f0f0;
+        }
+
+        #msg {
+          background-color: #282828;
+          color: #f0f0f0;
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        html,
+        body {
+          background-color: white;
+        }
+
+        #msg {
+          background-color: white;
+          color: black;
+        }
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      #app {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      #msg {
+        padding: 1em;
+        border-radius: 0.5em;
+        box-shadow: 0px 0px 5px red;
+        transition: transform .2s;
+      }
+
+      #msg:hover {
+        transform: scale(1.01);
+      }
+
+      a {
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <a rel="noopener" href="https://github.com/SlimeNull/AnyWebApp" target="_blank">
+        <div id="msg">你好, Hello, こんいちは! Auto reload!</div>
+      </a>
+    </div>
+  </body>
+</html>

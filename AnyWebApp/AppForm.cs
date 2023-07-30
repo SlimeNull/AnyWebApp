@@ -1,10 +1,12 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Windows.Forms;
 using AnyWebApp.Utils;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Win32;
 
 namespace AnyWebApp
 {
@@ -27,20 +29,58 @@ namespace AnyWebApp
             if (File.Exists(App.Config.WindowIcon))
                 Icon = new Icon(App.Config.WindowIcon);
 
+            if (App.Config.WindowTheme == AppConfig.Theme.Auto)
+                EnableWindowThemeAuto();
+            else if (App.Config.WindowTheme == AppConfig.Theme.Dark)
+                SwitchToDarkMode();
+            else
+                SwitchToLightMode();
+
             UriBase = $"{App.Config.Scheme}://{App.Config.VirtualHostName}";
             _ = webView.EnsureCoreWebView2Async();
         }
 
-        public readonly string UriBase;
+        private void SwitchToLightMode()
+        {
+            NativeMethods.EnableDarkModeForWindow(Handle, false);
+            BackColor = Color.FromArgb(255, 255, 255);
+        }
 
+        private void SwitchToDarkMode()
+        {
+            NativeMethods.EnableDarkModeForWindow(Handle, true);
+            BackColor = Color.FromArgb(24, 24, 24);
+        }
+
+        private void EnableWindowThemeAuto()
+        {
+            if (SystemHelper.IsDarkTheme())
+                SwitchToDarkMode();
+            else
+                SwitchToLightMode();
+
+
+            SystemEvents.UserPreferenceChanged += (s, e) =>
+            {
+                if (SystemHelper.IsDarkTheme())
+                    SwitchToDarkMode();
+                else
+                    SwitchToLightMode();
+            };
+        }
+
+        public readonly string UriBase;
         private FileSystemWatcher? fileSystemWatcher;
+        private HttpClient? httpClient;
 
         private void CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
         {
             var coreWebView2 = webView.CoreWebView2;
 
             coreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+
             coreWebView2.WebResourceRequested += CoreWebView2WebResourceRequested;
+            coreWebView2.WebResourceResponseReceived += CoreWebView2WebResourceResponseReceived;
 
             coreWebView2.AddHostObjectToScript("$nativeWindow", new Injections.Window(this));
 
@@ -63,6 +103,9 @@ namespace AnyWebApp
 
         private void CoreWebView2WebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
+            if (sender is not CoreWebView2 coreWebView2)
+                return;
+
             Uri uri = new Uri(e.Request.Uri);
 
             // 如果是本地请求, 尝试映射本地文件
@@ -78,12 +121,7 @@ namespace AnyWebApp
                 }
             }
 
-            if (e.Response != null)
-                return;
-
-            // 下面是找不到资源的时候进行的处理
-
-            // 如果是本地请求
+            // 如果是本地请求, 并且没有被映射到本地文件 (没有找到与 URI 对应的文件)
             if (uri.Host == App.Config.VirtualHostName)
             {
                 if (App.Config.EnableIndexFiles && e.ResourceContext == CoreWebView2WebResourceContext.Document && uri.PathAndQuery == "/")
@@ -117,6 +155,42 @@ namespace AnyWebApp
                     }
                 }
             }
+
+            // 如果启用了跨域伪造, 并且当前请求是 preflight request
+            if (App.Config.EnableFakeCors)
+            {
+                if (e.Request.Method == HttpMethod.Options.Method)
+                {
+                    foreach (var origin in App.Config.FakeCorsTargetOrigins)
+                    {
+                        if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri? originUri))
+                            continue;
+                        if (!originUri.IsBaseOf(uri))
+                            continue;
+
+                        e.Response = GenerateResponseForCorPreflight(coreWebView2);
+                        return;
+                    }
+                }
+                else if (e.Request.Headers.Contains(HttpHeaderNames.Origin))
+                {
+                    foreach (var origin in App.Config.FakeCorsTargetOrigins)
+                    {
+                        if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri? originUri))
+                            continue;
+                        if (!originUri.IsBaseOf(uri))
+                            continue;
+
+                        e.Response = GenerateResponseForCorResource(coreWebView2, e.Request);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void CoreWebView2WebResourceResponseReceived(object? sender, CoreWebView2WebResourceResponseReceivedEventArgs e)
+        {
+
         }
 
         private void EnableFileSystemWatcher(CoreWebView2 coreWebView2, string path)
@@ -144,7 +218,71 @@ namespace AnyWebApp
             };
         }
 
-        private static CoreWebView2WebResourceResponse? GenerateResponseFromFile(CoreWebView2 coreWebView2, string path)
+        private CoreWebView2WebResourceResponse GenerateResponse(CoreWebView2 coreWebView2, CoreWebView2WebResourceRequest request)
+        {
+            if (httpClient == null)
+                httpClient = new HttpClient();
+
+            HttpRequestMessage requestMessage = new HttpRequestMessage(new HttpMethod(request.Method), request.Uri);
+
+            foreach (var headerKV in request.Headers)
+                requestMessage.Headers.Add(headerKV.Key, headerKV.Value);
+
+            HttpResponseMessage responseMessage = httpClient.Send(requestMessage);
+
+            string headerText = responseMessage.Headers.ToString();
+
+            MemoryStream ms = new MemoryStream();
+            responseMessage.Content.ReadAsStream().CopyTo(ms);
+
+            ms.Seek(0, SeekOrigin.Begin);
+
+            return coreWebView2.Environment.CreateWebResourceResponse(ms, (int)responseMessage.StatusCode, responseMessage.StatusCode.ToString(), headerText);
+        }
+
+        private CoreWebView2WebResourceResponse GenerateResponseForCorPreflight(CoreWebView2 coreWebView2)
+        {
+            StringBuilder headersBuilder = new StringBuilder();
+            headersBuilder.AppendLine("Content-Length: 0");
+
+            headersBuilder.AppendLine($"{HttpHeaderNames.AccessControlAllowOrigin}: *");
+            headersBuilder.AppendLine($"{HttpHeaderNames.AccessControlAllowMethods}: *");
+            headersBuilder.AppendLine($"{HttpHeaderNames.AccessControlAllowHeaders}: *");
+
+            return coreWebView2.Environment.CreateWebResourceResponse(new MemoryStream(), 200, "OK", headersBuilder.ToString());
+        }
+
+        private CoreWebView2WebResourceResponse GenerateResponseForCorResource(CoreWebView2 coreWebView2, CoreWebView2WebResourceRequest request)
+        {
+            if (httpClient == null)
+                httpClient = new HttpClient();
+
+            HttpRequestMessage requestMessage = new HttpRequestMessage(new HttpMethod(request.Method), request.Uri);
+
+            foreach (var headerKV in request.Headers)
+                requestMessage.Headers.Add(headerKV.Key, headerKV.Value);
+
+            HttpResponseMessage responseMessage = httpClient.Send(requestMessage);
+
+            responseMessage.Headers.Remove(HttpHeaderNames.AccessControlAllowOrigin);
+            responseMessage.Headers.Remove(HttpHeaderNames.AccessControlAllowMethods);
+            responseMessage.Headers.Remove(HttpHeaderNames.AccessControlAllowHeaders);
+
+            responseMessage.Headers.Add(HttpHeaderNames.AccessControlAllowOrigin, "*");
+            responseMessage.Headers.Add(HttpHeaderNames.AccessControlAllowMethods, "*");
+            responseMessage.Headers.Add(HttpHeaderNames.AccessControlAllowHeaders, "*");
+
+            string headerText = responseMessage.Headers.ToString();
+
+            MemoryStream ms = new MemoryStream();
+            responseMessage.Content.ReadAsStream().CopyTo(ms);
+
+            ms.Seek(0, SeekOrigin.Begin);
+
+            return coreWebView2.Environment.CreateWebResourceResponse(ms, (int)responseMessage.StatusCode, responseMessage.StatusCode.ToString(), headerText);
+        }
+
+        private CoreWebView2WebResourceResponse? GenerateResponseFromFile(CoreWebView2 coreWebView2, string path)
         {
             if (!File.Exists(path))
                 return null;

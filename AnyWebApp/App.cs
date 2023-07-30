@@ -29,6 +29,7 @@ namespace AnyWebApp
 #if DEBUG
             Config.EnableDeveloperTools = true;
             Config.EnableAutoReload = true;
+            Config.EnableFakeCors = true;
 #endif
         }
 
